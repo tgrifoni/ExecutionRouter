@@ -1,4 +1,6 @@
-﻿namespace ExecutionRouter.Api.Middleware;
+﻿using ExecutionRouter.Domain.Constants;
+
+namespace ExecutionRouter.Api.Middleware;
 
 /// <summary>
 /// Middleware for handling global exceptions
@@ -24,7 +26,7 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
         var requestId = context.Request.Headers["X-Request-Id"].FirstOrDefault() ??
-            context.Request.Headers["X-ExecutionRouter-RequestId"].FirstOrDefault() ??
+            context.Request.Headers[Headers.ExecutionRouter.RequestId].FirstOrDefault() ??
             "unknown";
 
         var response = new
@@ -36,8 +38,8 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
             Timestamp = DateTime.UtcNow
         };
 
-        context.Response.Headers["X-ExecutionRouter-RequestId"] = requestId;
-        context.Response.Headers["X-ExecutionRouter-Instance"] = Environment.MachineName;
+        context.Response.Headers[Headers.ExecutionRouter.RequestId] = requestId;
+        context.Response.Headers[Headers.ExecutionRouter.Instance] = Environment.MachineName;
 
         var jsonResponse = System.Text.Json.JsonSerializer.Serialize(response);
         await context.Response.WriteAsync(jsonResponse);

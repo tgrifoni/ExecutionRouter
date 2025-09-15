@@ -1,3 +1,4 @@
+using ExecutionRouter.Domain.Constants;
 using ExecutionRouter.Domain.Interfaces;
 using ExecutionRouter.Infrastructure.Observability;
 using System.Diagnostics;
@@ -54,12 +55,12 @@ public class RequestLoggingMiddleware(
 
     private static string GetRequestId(HttpContext context) =>
         context.Request.Headers["X-Request-Id"].FirstOrDefault() ??
-        context.Request.Headers["X-ExecutionRouter-RequestId"].FirstOrDefault() ??
+        context.Request.Headers[Headers.ExecutionRouter.RequestId].FirstOrDefault() ??
         Guid.NewGuid().ToString("N")[..12];
 
     private static string? GetCorrelationId(HttpContext context) =>
         context.Request.Headers["X-Correlation-Id"].FirstOrDefault() ??
-        context.Request.Headers["X-ExecutionRouter-CorrelationId"].FirstOrDefault();
+        context.Request.Headers[Headers.ExecutionRouter.CorrelationId].FirstOrDefault();
 
     private static string DetermineStatus(int statusCode) =>
         statusCode switch

@@ -2,6 +2,7 @@ using ExecutionRouter.Application.Services;
 using ExecutionRouter.Application.Common;
 using ExecutionRouter.Application.Configuration;
 using ExecutionRouter.Application.Validators;
+using ExecutionRouter.Domain.Constants;
 using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Interfaces;
 using ExecutionRouter.Infrastructure.Executors;
@@ -87,11 +88,11 @@ public static class ServiceCollectionExtensions
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .WithExposedHeaders(
-                        "X-ExecutionRouter-RequestId",
-                        "X-ExecutionRouter-CorrelationId", 
-                        "X-ExecutionRouter-Instance",
-                        "X-ExecutionRouter-AttemptCount",
-                        "X-ExecutionRouter-Duration");
+                        Headers.ExecutionRouter.RequestId,
+                        Headers.ExecutionRouter.CorrelationId, 
+                        Headers.ExecutionRouter.Instance,
+                        Headers.ExecutionRouter.AttemptCount,
+                        Headers.ExecutionRouter.Duration);
             });
         });
         

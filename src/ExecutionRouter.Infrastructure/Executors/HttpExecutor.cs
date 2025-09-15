@@ -1,4 +1,5 @@
 using System.Text;
+using ExecutionRouter.Domain.Constants;
 using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Interfaces;
 using ExecutionRouter.Domain.ValueObjects;
@@ -20,7 +21,7 @@ public sealed class HttpExecutor(HttpClient httpClient) : IExecutor
         "accept-language",
         "authorization",
         "cache-control",
-        "content-type",
+        Headers.Standard.ContentType,
         "if-match",
         "if-none-match",
         "if-modified-since",
@@ -121,17 +122,17 @@ public sealed class HttpExecutor(HttpClient httpClient) : IExecutor
         var httpRequest = new HttpRequestMessage(new HttpMethod(request.Method), targetUrl);
         var validHeaders = request.Headers.Where(header =>
             _allowedHeaders.Contains(header.Key) &&
-            !header.Key.Equals("content-type", StringComparison.OrdinalIgnoreCase));
+            !header.Key.Equals(Headers.Standard.ContentType, StringComparison.OrdinalIgnoreCase));
         
         foreach (var header in validHeaders)
         {
             httpRequest.Headers.Add(header.Key, header.Value);
         }
         
-        httpRequest.Headers.Add("X-ExecutionRouter-RequestId", request.RequestId.Value);
+        httpRequest.Headers.Add(Headers.ExecutionRouter.RequestId, request.RequestId.Value);
         if (request.CorrelationId is not null)
         {
-            httpRequest.Headers.Add("X-ExecutionRouter-CorrelationId", request.CorrelationId.Value);
+            httpRequest.Headers.Add(Headers.ExecutionRouter.CorrelationId, request.CorrelationId.Value);
         }
 
         if (string.IsNullOrEmpty(request.Body))
@@ -139,7 +140,7 @@ public sealed class HttpExecutor(HttpClient httpClient) : IExecutor
             return httpRequest;
         }
         
-        var contentType = request.Headers.GetValueOrDefault("content-type", "application/json");
+        var contentType = request.Headers.GetValueOrDefault(Headers.Standard.ContentType, System.Net.Mime.MediaTypeNames.Application.Json);
         httpRequest.Content = new StringContent(request.Body, Encoding.UTF8, contentType);
 
         return httpRequest;

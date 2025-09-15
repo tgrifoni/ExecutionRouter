@@ -1,5 +1,6 @@
 using ExecutionRouter.Application.Models;
 using ExecutionRouter.Application.Services;
+using ExecutionRouter.Domain.Constants;
 using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Exceptions;
 using ExecutionRouter.Domain.ValueObjects;
@@ -117,22 +118,22 @@ public class ExecutionController(
     }
 
     private string GetOrGenerateRequestId() => Request.Headers["X-Request-Id"].FirstOrDefault() ??
-       Request.Headers["X-ExecutionRouter-RequestId"].FirstOrDefault() ??
+       Request.Headers[Headers.ExecutionRouter.RequestId].FirstOrDefault() ??
        Guid.NewGuid().ToString("N")[..12];
 
     private string? GetCorrelationId() => Request.Headers["X-Correlation-Id"].FirstOrDefault() ??
-        Request.Headers["X-ExecutionRouter-CorrelationId"].FirstOrDefault();
+        Request.Headers[Headers.ExecutionRouter.CorrelationId].FirstOrDefault();
 
     private void AddResponseHeaders(ExecutionResponseDto response)
     {
-        Response.Headers["X-ExecutionRouter-RequestId"] = response.RequestId;
-        Response.Headers["X-ExecutionRouter-Instance"] = Environment.MachineName;
-        Response.Headers["X-ExecutionRouter-AttemptCount"] = response.AttemptSummaries.Count().ToString();
-        Response.Headers["X-ExecutionRouter-Duration"] = $"{response.DurationMilliseconds:F2}ms";
+        Response.Headers[Headers.ExecutionRouter.RequestId] = response.RequestId;
+        Response.Headers[Headers.ExecutionRouter.Instance] = Environment.MachineName;
+        Response.Headers[Headers.ExecutionRouter.AttemptCount] = response.AttemptSummaries.Count().ToString();
+        Response.Headers[Headers.ExecutionRouter.Duration] = $"{response.DurationMilliseconds:F2}ms";
         
         if (!string.IsNullOrEmpty(response.CorrelationId))
         {
-            Response.Headers["X-ExecutionRouter-CorrelationId"] = response.CorrelationId;
+            Response.Headers[Headers.ExecutionRouter.CorrelationId] = response.CorrelationId;
         }
     }
 
@@ -143,8 +144,8 @@ public class ExecutionController(
             return;
         }
         
-        Response.Headers["X-ExecutionRouter-RequestId"] = requestId;
-        Response.Headers["X-ExecutionRouter-Instance"] = Environment.MachineName;
+        Response.Headers[Headers.ExecutionRouter.RequestId] = requestId;
+        Response.Headers[Headers.ExecutionRouter.Instance] = Environment.MachineName;
     }
 
     private static int DetermineHttpStatusCode(ExecutionResponse response)
