@@ -11,5 +11,9 @@ public interface IConfigurationValidationService
     /// <summary>
     /// Validate the execution configuration
     /// </summary>
-    ConfigurationValidationResult ValidateConfiguration(ExecutionConfiguration configuration);
+    ConfigurationValidationResult ValidateConfiguration(SecuritySettings securitySettings,
+        HttpExecutorSettings httpExecutorSettings,
+        PowerShellExecutorSettings powershellExecutorSettings,
+        ResilienceSettings resilienceSettings,
+        ObservabilitySettings observabilitySettings);
 }

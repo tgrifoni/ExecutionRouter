@@ -8,6 +8,8 @@ namespace ExecutionRouter.Application.Configuration;
 /// </summary>
 public class ResilienceSettings
 {
+    public const string SectionName = "ExecutionRouter:Resilience";
+    
     /// <summary>
     /// Maximum number of retry attempts (0 to 5)
     /// </summary>
@@ -35,12 +37,14 @@ public class ResilienceSettings
     /// <summary>
     /// If Jitter should be used for exponential backoff
     /// </summary>
+    [Required]
     public bool UseJitter { get; init; } = true;
 
     /// <summary>
     /// HTTP status codes that should trigger retries
     /// </summary>
-    public IEnumerable<int> RetriableHttpStatusCodes { get; init; } =
+    [Required]
+    public HashSet<int> RetriableHttpStatusCodes { get; init; } = 
     [
         (int)HttpStatusCode.RequestTimeout,
         (int)HttpStatusCode.TooManyRequests,
@@ -53,10 +57,11 @@ public class ResilienceSettings
     /// <summary>
     /// Exception types that should trigger retries
     /// </summary>
-    public IEnumerable<string> RetriableExceptionTypes { get; init; } =
+    [Required]
+    public HashSet<string> RetriableExceptionTypes { get; init; } = 
     [
         "HttpRequestException",
-        "TaskCanceledException",
+        "TaskCanceledException", 
         "SocketException",
         "TimeoutException"
     ];

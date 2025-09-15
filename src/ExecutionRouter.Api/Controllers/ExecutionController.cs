@@ -1,3 +1,4 @@
+using ExecutionRouter.Application.Configuration;
 using ExecutionRouter.Application.Models;
 using ExecutionRouter.Application.Services;
 using ExecutionRouter.Domain.Constants;
@@ -5,6 +6,7 @@ using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Exceptions;
 using ExecutionRouter.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace ExecutionRouter.Api.Controllers;
 
@@ -15,6 +17,7 @@ namespace ExecutionRouter.Api.Controllers;
 [Route("api/{**path}")]
 public class ExecutionController(
     ExecutionOrchestrationService orchestrationService,
+    IOptions<SecuritySettings> securityOptions,
     ILogger<ExecutionController> logger)
     : ControllerBase
 {
@@ -80,11 +83,12 @@ public class ExecutionController(
             body = await reader.ReadToEndAsync();
         }
 
-        var timeoutSeconds = 10;
+        var securitySettings = securityOptions.Value;
+        var timeoutSeconds = securitySettings.MaxTimeoutSeconds;
         if (Request.Headers.TryGetValue(Headers.Extended.XRequestTimeout, out var timeoutHeader) &&
             int.TryParse(timeoutHeader.FirstOrDefault(), out var parsedTimeout))
         {
-            timeoutSeconds = parsedTimeout;
+            timeoutSeconds = Math.Min(parsedTimeout, securitySettings.MaxTimeoutSeconds);
         }
 
         return ExecutionRequest.Create(

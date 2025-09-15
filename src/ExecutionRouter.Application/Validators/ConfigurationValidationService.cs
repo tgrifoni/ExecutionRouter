@@ -9,35 +9,39 @@ namespace ExecutionRouter.Application.Validators;
 /// </summary>
 public class ConfigurationValidationService : IConfigurationValidationService
 {
-    public ConfigurationValidationResult ValidateConfiguration(ExecutionConfiguration configuration)
+    public ConfigurationValidationResult ValidateConfiguration(SecuritySettings securitySettings,
+        HttpExecutorSettings httpExecutorSettings,
+        PowerShellExecutorSettings powershellExecutorSettings,
+        ResilienceSettings resilienceSettings,
+        ObservabilitySettings observabilitySettings)
     {
         var validationErrors = new List<string>();
 
-        var securityValidation = ValidateSecuritySettings(configuration.Security);
+        var securityValidation = ValidateSecuritySettings(securitySettings);
         if (!securityValidation.IsValid)
         {
             validationErrors.AddRange(securityValidation.Errors);
         }
 
-        var httpValidation = ValidateHttpExecutorSettings(configuration.HttpExecutor);
+        var httpValidation = ValidateHttpExecutorSettings(httpExecutorSettings);
         if (!httpValidation.IsValid)
         {
             validationErrors.AddRange(httpValidation.Errors);
         }
 
-        var psValidation = ValidatePowerShellSettings(configuration.PowerShellExecutor);
+        var psValidation = ValidatePowerShellSettings(powershellExecutorSettings);
         if (!psValidation.IsValid)
         {
             validationErrors.AddRange(psValidation.Errors);
         }
 
-        var resilienceValidation = ValidateResilienceSettings(configuration.Resilience);
+        var resilienceValidation = ValidateResilienceSettings(resilienceSettings);
         if (!resilienceValidation.IsValid)
         {
             validationErrors.AddRange(resilienceValidation.Errors);
         }
 
-        var observabilityValidation = ValidateObservabilitySettings(configuration.Observability);
+        var observabilityValidation = ValidateObservabilitySettings(observabilitySettings);
         if (!observabilityValidation.IsValid)
         {
             validationErrors.AddRange(observabilityValidation.Errors);

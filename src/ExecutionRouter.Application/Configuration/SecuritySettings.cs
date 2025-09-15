@@ -9,6 +9,30 @@ namespace ExecutionRouter.Application.Configuration;
 /// </summary>
 public class SecuritySettings
 {
+    public const string SectionName = "ExecutionRouter:Security";
+
+    /// <summary>
+    /// The allowed HTTP methods for requests.
+    /// </summary>
+    [Required]
+    public HashSet<string> AllowedMethods { get; init; } = ["GET", "POST", "PUT", "PATCH", "DELETE"];
+
+    /// <summary>
+    /// Headers that should be blocked/filtered from requests
+    /// </summary>
+    [Required]
+    public HashSet<string> BlockedHeaders { get; init; } = 
+    [
+        "host",
+        "connection", 
+        "content-length",
+        "transfer-encoding",
+        "upgrade",
+        "x-request-id",
+        "x-correlation-id",
+        "x-executionrouter-executortype"
+    ];
+    
     /// <summary>
     /// Maximum request body size in bytes (default: 10MB)
     /// </summary>
@@ -46,10 +70,16 @@ public class SecuritySettings
     public int MaxTimeoutSeconds { get; init; } = 120;
 
     /// <summary>
+    /// Maximum path length in characters
+    /// </summary>
+    [Range(100, 10_000)]
+    public int MaxPathLength { get; init; } = 2048;
+
+    /// <summary>
     /// Headers that should be masked in logs for security
     /// </summary>
     [Required]
-    public IEnumerable<string> SensitiveHeaders { get; init; } =
+    public HashSet<string> SensitiveHeaders { get; init; } = 
     [
         Headers.Standard.Authorization,
         Headers.Extended.XApiKey,
@@ -63,12 +93,13 @@ public class SecuritySettings
     /// <summary>
     /// Query parameter names that should be masked in logs
     /// </summary>
-    public IEnumerable<string> SensitiveQueryParameters { get; init; } =
+    [Required]
+    public HashSet<string> SensitiveQueryParameters { get; init; } = 
     [
         "password",
         "secret",
         "token",
-        "key",
+        "key", 
         "auth",
         "credential"
     ];
@@ -76,12 +107,14 @@ public class SecuritySettings
     /// <summary>
     /// Enable request body content validation
     /// </summary>
+    [Required]
     public bool ValidateRequestBody { get; init; } = true;
 
     /// <summary>
     /// Allowed content types for request bodies
     /// </summary>
-    public IEnumerable<string> AllowedContentTypes { get; init; } =
+    [Required]
+    public HashSet<string> AllowedContentTypes { get; init; } = 
     [
         MediaTypeNames.Application.Json,
         MediaTypeNames.Application.Xml,

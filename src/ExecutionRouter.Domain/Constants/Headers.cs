@@ -47,29 +47,9 @@ public static class Headers
     public static class Standard
     {
         /// <summary>
-        /// Accept header
-        /// </summary>
-        public const string Accept = "accept";
-        
-        /// <summary>
-        /// Accept-Encoding header
-        /// </summary>
-        public const string AcceptEncoding = "accept-encoding";
-        
-        /// <summary>
-        /// Accept-Language header
-        /// </summary>
-        public const string AcceptLanguage = "accept-language";
-        
-        /// <summary>
         /// Authorization header
         /// </summary>
         public const string Authorization = "authorization";
-        
-        /// <summary>
-        /// Cache-Control header
-        /// </summary>
-        public const string CacheControl = "cache-control";
         
         /// <summary>
         /// Connection header
@@ -102,26 +82,6 @@ public static class Headers
         public const string Host = "host";
         
         /// <summary>
-        /// If-Match header
-        /// </summary>
-        public const string IfMatch = "if-match";
-        
-        /// <summary>
-        /// If-Modified-Since header
-        /// </summary>
-        public const string IfModifiedSince = "if-modified-since";
-        
-        /// <summary>
-        /// If-None-Match header
-        /// </summary>
-        public const string IfNoneMatch = "if-none-match";
-        
-        /// <summary>
-        /// If-Unmodified-Since header
-        /// </summary>
-        public const string IfUnmodifiedSince = "if-unmodified-since";
-        
-        /// <summary>
         /// Proxy-Authorization header
         /// </summary>
         public const string ProxyAuthorization = "proxy-authorization";
@@ -148,41 +108,6 @@ public static class Headers
     public static class Extended
     {
         /// <summary>
-        /// X-Request-Id header (standard request ID)
-        /// </summary>
-        public const string XRequestId = "X-Request-Id";
-        
-        /// <summary>
-        /// X-Correlation-Id header (standard correlation ID)
-        /// </summary>
-        public const string XCorrelationId = "X-Correlation-Id";
-        
-        /// <summary>
-        /// X-Request-Timeout header
-        /// </summary>
-        public const string XRequestTimeout = "X-Request-Timeout";
-        
-        /// <summary>
-        /// X-Requested-With header
-        /// </summary>
-        public const string XRequestedWith = "x-requested-with";
-        
-        /// <summary>
-        /// X-Forwarded-Authorization header
-        /// </summary>
-        public const string XForwardedAuthorization = "x-forwarded-authorization";
-        
-        /// <summary>
-        /// X-Forwarded-For header
-        /// </summary>
-        public const string XForwardedFor = "x-forwarded-for";
-        
-        /// <summary>
-        /// X-Real-IP header
-        /// </summary>
-        public const string XRealIp = "x-real-ip";
-        
-        /// <summary>
         /// X-API-Key header
         /// </summary>
         public const string XApiKey = "x-api-key";
@@ -191,5 +116,25 @@ public static class Headers
         /// X-Auth-Token header
         /// </summary>
         public const string XAuthToken = "x-auth-token";
+        
+        /// <summary>
+        /// X-Correlation-Id header (standard correlation ID)
+        /// </summary>
+        public const string XCorrelationId = "X-Correlation-Id";
+        
+        /// <summary>
+        /// X-Forwarded-Authorization header
+        /// </summary>
+        public const string XForwardedAuthorization = "x-forwarded-authorization";
+        
+        /// <summary>
+        /// X-Request-Id header (standard request ID)
+        /// </summary>
+        public const string XRequestId = "X-Request-Id";
+        
+        /// <summary>
+        /// X-Request-Timeout header
+        /// </summary>
+        public const string XRequestTimeout = "X-Request-Timeout";
     }
 }

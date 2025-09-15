@@ -1,32 +1,18 @@
 using System.Text;
+using ExecutionRouter.Application.Configuration;
 using ExecutionRouter.Domain.Constants;
 using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace ExecutionRouter.Application.Validators;
 
 /// <summary>
 /// Service for validating execution requests
 /// </summary>
-public sealed class ValidationService(int maxBodySizeBytes = ValidationService.MaxBodySizeBytes) : IValidationService
+public sealed class ValidationService(IOptions<SecuritySettings> securityOptions) : IValidationService
 {
-    private const int MaxTimeoutSeconds = 600;
-    private const int MaxBodySizeBytes = 10 * 1024 * 1024;
-    private const int MaxHeaderValueLength = 1024;
-    private const int MaxPathLength = 2048;
-
-    private readonly HashSet<string> _allowedMethods = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"
-    };
-    private readonly HashSet<string> _blockedHeaders = new(StringComparer.OrdinalIgnoreCase)
-    {
-        Headers.Standard.Host,
-        Headers.Standard.Connection,
-        Headers.Standard.ContentLength,
-        Headers.Standard.TransferEncoding,
-        Headers.Standard.Upgrade
-    };
+    private readonly SecuritySettings _securitySettings = securityOptions.Value;
 
     public ValidationResult ValidateRequest(ExecutionRequest request)
     {
@@ -36,7 +22,7 @@ public sealed class ValidationService(int maxBodySizeBytes = ValidationService.M
         {
             errors.Add("Method is required");
         }
-        else if (!_allowedMethods.Contains(request.Method))
+        else if (!_securitySettings.AllowedMethods.Contains(request.Method, StringComparer.OrdinalIgnoreCase))
         {
             errors.Add($"Unsupported HTTP method: {request.Method}");
         }
@@ -45,17 +31,17 @@ public sealed class ValidationService(int maxBodySizeBytes = ValidationService.M
         {
             errors.Add("Path is required");
         }
-        else if (request.Path.Length > MaxPathLength)
+        else if (request.Path.Length > _securitySettings.MaxPathLength)
         {
-            errors.Add($"Path too long. Maximum length is {MaxPathLength} characters");
+            errors.Add($"Path too long. Maximum length is {_securitySettings.MaxPathLength} characters");
         }
 
         if (!string.IsNullOrEmpty(request.Body))
         {
             var bodyBytes = Encoding.UTF8.GetByteCount(request.Body);
-            if (bodyBytes > maxBodySizeBytes)
+            if (bodyBytes > _securitySettings.MaxRequestBodySizeBytes)
             {
-                errors.Add($"Request body too large. Maximum size is {maxBodySizeBytes} bytes");
+                errors.Add($"Request body too large. Maximum size is {_securitySettings.MaxRequestBodySizeBytes} bytes");
             }
         }
 
@@ -67,15 +53,15 @@ public sealed class ValidationService(int maxBodySizeBytes = ValidationService.M
                 continue;
             }
 
-            if (_blockedHeaders.Contains(header.Key))
+            if (_securitySettings.BlockedHeaders.Contains(header.Key, StringComparer.OrdinalIgnoreCase))
             {
                 errors.Add($"Header '{header.Key}' is not allowed");
                 continue;
             }
 
-            if (header.Value.Length > MaxHeaderValueLength)
+            if (header.Value.Length > _securitySettings.MaxHeaderValueLength)
             {
-                errors.Add($"Header '{header.Key}' value too long. Maximum length is {MaxHeaderValueLength} characters");
+                errors.Add($"Header '{header.Key}' value too long. Maximum length is {_securitySettings.MaxHeaderValueLength} characters");
             }
         }
 
@@ -83,7 +69,7 @@ public sealed class ValidationService(int maxBodySizeBytes = ValidationService.M
         {
             errors.Add("Timeout must be greater than zero");
         }
-        else if (request.TimeoutSeconds > TimeSpan.FromSeconds(MaxTimeoutSeconds))
+        else if (request.TimeoutSeconds > TimeSpan.FromSeconds(_securitySettings.MaxTimeoutSeconds))
         {
             errors.Add("Timeout cannot exceed 10 minutes");
         }

@@ -1,40 +1,26 @@
 using System.Text;
+using ExecutionRouter.Application.Configuration;
 using ExecutionRouter.Domain.Constants;
 using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Interfaces;
 using ExecutionRouter.Domain.ValueObjects;
 using ExecutionRouter.Domain.Exceptions;
+using Microsoft.Extensions.Options;
 
 namespace ExecutionRouter.Infrastructure.Executors;
 
 /// <summary>
 /// HTTP executor that forwards requests to external HTTP endpoints
 /// </summary>
-public sealed class HttpExecutor(HttpClient httpClient) : IExecutor
+public sealed class HttpExecutor(HttpClient httpClient,
+    IOptions<ObservabilitySettings> observabilityOptions,
+    IOptions<HttpExecutorSettings> httpExecutorOptions)
+    : IExecutor
 {
+    private readonly ObservabilitySettings _observabilitySettings = observabilityOptions.Value;
+    private readonly HttpExecutorSettings _httpExecutorSettings = httpExecutorOptions.Value;
+    
     public ExecutorType ExecutorType => ExecutorType.Http;
-
-    private readonly HashSet<string> _allowedHeaders = new(StringComparer.OrdinalIgnoreCase)
-    {
-        Headers.Standard.Accept,
-        Headers.Standard.AcceptEncoding,
-        Headers.Standard.AcceptLanguage,
-        Headers.Standard.Authorization,
-        Headers.Standard.CacheControl,
-        Headers.Standard.ContentType,
-        Headers.Standard.IfMatch,
-        Headers.Standard.IfNoneMatch,
-        Headers.Standard.IfModifiedSince,
-        Headers.Standard.IfUnmodifiedSince,
-        Headers.Standard.UserAgent,
-        Headers.Extended.XRequestedWith,
-        Headers.Extended.XForwardedFor,
-        Headers.Extended.XRealIp,
-        Headers.Extended.XApiKey,
-        Headers.Extended.XAuthToken,
-        Headers.Extended.XCorrelationId,
-        Headers.Extended.XRequestId
-    };
 
     public async Task<ExecutorResult> ExecuteAsync(ExecutionRequest request, CancellationToken cancellationToken = default)
     {
@@ -121,7 +107,7 @@ public sealed class HttpExecutor(HttpClient httpClient) : IExecutor
     {
         var httpRequest = new HttpRequestMessage(new HttpMethod(request.Method), targetUrl);
         var validHeaders = request.Headers.Where(header =>
-            _allowedHeaders.Contains(header.Key) &&
+            !_httpExecutorSettings.FilteredHeaders.Contains(header.Key, StringComparer.OrdinalIgnoreCase) &&
             !header.Key.Equals(Headers.Standard.ContentType, StringComparison.OrdinalIgnoreCase));
         
         foreach (var header in validHeaders)
@@ -146,7 +132,7 @@ public sealed class HttpExecutor(HttpClient httpClient) : IExecutor
         return httpRequest;
     }
 
-    private static async Task<ExecutorResult> BuildExecutorResult(HttpResponseMessage response)
+    private async Task<ExecutorResult> BuildExecutorResult(HttpResponseMessage response)
     {
         var headers = new Dictionary<string, string>();
         
@@ -161,11 +147,11 @@ public sealed class HttpExecutor(HttpClient httpClient) : IExecutor
         }
         
         var body = await response.Content.ReadAsStringAsync();
-        if (body.Length > 10_000)
+        if (body.Length > _observabilitySettings.MaxLogEntrySizeChars)
         {
-            body = body[..10000] + "... (truncated)";
+            body = body[.._observabilitySettings.MaxLogEntrySizeChars] + "... (truncated)";
         }
-
+        
         return ExecutorResult.Http((int)response.StatusCode, headers, body);
     }
 

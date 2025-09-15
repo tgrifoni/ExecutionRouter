@@ -8,6 +8,8 @@ namespace ExecutionRouter.Application.Configuration;
 /// </summary>
 public class HttpExecutorSettings
 {
+    public const string SectionName = "ExecutionRouter:HttpExecutor";
+    
     /// <summary>
     /// Default timeout for HTTP requests in seconds
     /// </summary>
@@ -24,7 +26,7 @@ public class HttpExecutorSettings
     /// Allowed target URL patterns (regex patterns)
     /// </summary>
     [Required]
-    public IEnumerable<string> AllowedTargetPatterns { get; init; } =
+    public HashSet<string> AllowedTargetPatterns { get; init; } = 
     [
         "^https?://.*"
     ];
@@ -32,7 +34,8 @@ public class HttpExecutorSettings
     /// <summary>
     /// Blocked target URL patterns (regex patterns)
     /// </summary>
-    public IEnumerable<string> BlockedTargetPatterns { get; init; } =
+    [Required]
+    public HashSet<string> BlockedTargetPatterns { get; init; } = 
     [
         "^https?://localhost.*",
         @"^https?://127\.0\.0\.1.*",
@@ -43,7 +46,8 @@ public class HttpExecutorSettings
     /// <summary>
     /// Headers that should not be forwarded to the target
     /// </summary>
-    public IEnumerable<string> FilteredHeaders { get; init; } =
+    [Required]
+    public HashSet<string> FilteredHeaders { get; init; } = 
     [
         Headers.Standard.Host,
         Headers.Standard.Connection,

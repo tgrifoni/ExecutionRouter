@@ -1,7 +1,6 @@
 using ExecutionRouter.Api.Extensions;
 using ExecutionRouter.Api.Middleware;
 using ExecutionRouter.Application.Configuration;
-using ExecutionRouter.Application.Services;
 using ExecutionRouter.Application.Validators;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
@@ -33,8 +32,11 @@ try
 {
     using var scope = app.Services.CreateScope();
     var configValidationService = scope.ServiceProvider.GetRequiredService<IConfigurationValidationService>();
-    var executionConfig = app.Services.GetRequiredService<IOptions<ExecutionConfiguration>>().Value;
-    var validationResult = configValidationService.ValidateConfiguration(executionConfig);
+    var validationResult = configValidationService.ValidateConfiguration(app.Services.GetRequiredService<IOptions<SecuritySettings>>().Value,
+        app.Services.GetRequiredService<IOptions<HttpExecutorSettings>>().Value,
+        app.Services.GetRequiredService<IOptions<PowerShellExecutorSettings>>().Value,
+        app.Services.GetRequiredService<IOptions<ResilienceSettings>>().Value,
+        app.Services.GetRequiredService<IOptions<ObservabilitySettings>>().Value);
     if (!validationResult.IsValid)
     {
         startupLogger.LogError("Configuration validation failed: {Errors}", validationResult.GetErrorSummary());

@@ -1,9 +1,11 @@
 using System.Text.Json;
+using ExecutionRouter.Application.Configuration;
 using ExecutionRouter.Application.Models;
 using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Interfaces;
 using ExecutionRouter.Domain.ValueObjects;
 using ExecutionRouter.Domain.Exceptions;
+using Microsoft.Extensions.Options;
 
 namespace ExecutionRouter.Infrastructure.Executors;
 
@@ -11,29 +13,17 @@ namespace ExecutionRouter.Infrastructure.Executors;
 /// PowerShell executor for running Exchange Online and directory commands
 /// Simplified implementation for demonstration purposes
 /// </summary>
-public sealed class PowerShellExecutor(ISystemClock systemClock) : IExecutor, IDisposable
+public sealed class PowerShellExecutor(ISystemClock systemClock,
+    IOptions<PowerShellExecutorSettings> powerShellOptions)
+    : IExecutor, IDisposable
 {
     public ExecutorType ExecutorType => ExecutorType.PowerShell;
 
-    private readonly HashSet<string> _allowedCommands = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Get-Mailbox",
-        "Get-User", 
-        "Get-Group",
-        "Get-DistributionGroup",
-        "Get-UnifiedGroup",
-        "Get-Recipient",
-        "Get-OrganizationConfig",
-        "Get-AcceptedDomain",
-        "Get-Transport*",
-        "Get-Compliance*"
-    };
-
+    private readonly PowerShellExecutorSettings _powerShellOptions = powerShellOptions.Value;
     private readonly JsonSerializerOptions _jsonSerializerOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
-    
     private readonly SemaphoreSlim _sessionSemaphore = new(1, 1);
     private bool _disposed;
 
@@ -95,7 +85,7 @@ public sealed class PowerShellExecutor(ISystemClock systemClock) : IExecutor, ID
             throw new ValidationException(["Invalid command format"]);
         }
 
-        var isAllowed = _allowedCommands.Any(allowed =>
+        var isAllowed = _powerShellOptions.AllowedCmdlets.Any(allowed =>
         {
             if (!allowed.EndsWith("*"))
             {
@@ -110,7 +100,7 @@ public sealed class PowerShellExecutor(ISystemClock systemClock) : IExecutor, ID
         {
             throw new ValidationException(errors:
             [
-                $"Command '{commandName}' is not allowed. Allowed commands: {string.Join(", ", _allowedCommands)}"
+                $"Command '{commandName}' is not allowed. Allowed commands: {string.Join(", ", _powerShellOptions.AllowedCmdlets)}"
             ]);
         }
 

@@ -7,9 +7,12 @@ namespace ExecutionRouter.Application.Configuration;
 /// </summary>
 public class PowerShellExecutorSettings
 {
+    public const string SectionName = "ExecutionRouter:PowerShellExecutor";
+    
     /// <summary>
     /// Enable PowerShell executor
     /// </summary>
+    [Required]
     public bool Enabled { get; init; } = true;
 
     /// <summary>
@@ -22,23 +25,25 @@ public class PowerShellExecutorSettings
     /// Allowed PowerShell cmdlets
     /// </summary>
     [Required]
-    public IEnumerable<string> AllowedCmdlets { get; init; } =
+    public HashSet<string> AllowedCmdlets { get; init; } = 
     [
+        "Get-ChildItem",
+        "Get-Content",
+        "Get-Location",
         "Get-Date",
+        "Get-History",
         "Get-Process",
         "Get-Service",
         "Test-Connection",
-        "Get-ChildItem",
-        "Get-Content",
-        "Write-Output",
-        "Write-Host"
+        "Write-Host",
+        "Write-Output"
     ];
 
     /// <summary>
     /// Blocked PowerShell cmdlets (blacklist)
     /// </summary>
     [Required]
-    public IEnumerable<string> BlockedCmdlets { get; init; } =
+    public HashSet<string> BlockedCmdlets { get; init; } = 
     [
         "Remove-Item",
         "Stop-Process",
@@ -46,12 +51,18 @@ public class PowerShellExecutorSettings
         "Set-ExecutionPolicy",
         "Invoke-Expression",
         "Invoke-Command",
-        "Start-Process"
+        "Start-Process",
+        "New-Item",
+        "Set-Content",
+        "Clear-Content",
+        "Remove-Variable",
+        "Set-Variable"
     ];
 
     /// <summary>
     /// Enable Exchange Online module
     /// </summary>
+    [Required]
     public bool EnableExchangeOnline { get; init; } = false;
 
     /// <summary>

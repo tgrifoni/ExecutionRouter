@@ -19,7 +19,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddExecutionRouter(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<ExecutionConfiguration>(configuration.GetSection(ExecutionConfiguration.SectionName));
+        services.Configure<SecuritySettings>(configuration.GetSection(SecuritySettings.SectionName));
+        services.Configure<HttpExecutorSettings>(configuration.GetSection(HttpExecutorSettings.SectionName));
+        services.Configure<PowerShellExecutorSettings>(configuration.GetSection(PowerShellExecutorSettings.SectionName));
+        services.Configure<ResilienceSettings>(configuration.GetSection(ResilienceSettings.SectionName));
+        services.Configure<ObservabilitySettings>(configuration.GetSection(ObservabilitySettings.SectionName));
         
         services.AddSingleton<ISystemClock, SystemClock>();
         services.AddSingleton<IMetricsCollector, InMemoryMetricsCollector>();
@@ -31,9 +35,10 @@ public static class ServiceCollectionExtensions
         
         services.AddScoped<IValidationService, ValidationService>();
         
-        services.AddHttpClient<HttpExecutor>(client =>
+        services.AddHttpClient<HttpExecutor>((serviceProvider, client) =>
         {
-            client.Timeout = TimeSpan.FromMinutes(2);
+            var httpSettings = serviceProvider.GetRequiredService<IOptions<HttpExecutorSettings>>().Value;
+            client.Timeout = TimeSpan.FromSeconds(httpSettings.DefaultTimeoutSeconds);
             client.DefaultRequestHeaders.Add(Headers.Standard.UserAgent, "ExecutionRouter/1.0");
         });
         services.AddScoped<IExecutor, HttpExecutor>();
@@ -41,16 +46,15 @@ public static class ServiceCollectionExtensions
         
         services.AddScoped<IResiliencePolicy>(serviceProvider =>
         {
-            var executionConfiguration = serviceProvider.GetRequiredService<IOptions<ExecutionConfiguration>>().Value;
-            var systemClock = serviceProvider.GetRequiredService<ISystemClock>();
+            var resilienceSettings = serviceProvider.GetRequiredService<IOptions<ResilienceSettings>>().Value;
             
             var retryConfig = RetryPolicyConfiguration.FromOptions(
-                executionConfiguration.Resilience.MaxRetryAttempts,
-                executionConfiguration.Resilience.BaseDelayMilliseconds,
-                executionConfiguration.Resilience.MaxDelayMilliseconds,
-                executionConfiguration.Resilience.BackoffMultiplier,
-                executionConfiguration.Resilience.UseJitter);
-            
+                resilienceSettings.MaxRetryAttempts,
+                resilienceSettings.BaseDelayMilliseconds,
+                resilienceSettings.MaxDelayMilliseconds,
+                resilienceSettings.BackoffMultiplier,
+                resilienceSettings.UseJitter);
+            var systemClock = serviceProvider.GetRequiredService<ISystemClock>();
             return new RetryResiliencePolicy(retryConfig, systemClock);
         });
         
