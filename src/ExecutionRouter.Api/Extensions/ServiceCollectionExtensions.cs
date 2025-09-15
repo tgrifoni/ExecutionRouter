@@ -34,7 +34,7 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<HttpExecutor>(client =>
         {
             client.Timeout = TimeSpan.FromMinutes(2);
-            client.DefaultRequestHeaders.Add("User-Agent", "ExecutionRouter/1.0");
+            client.DefaultRequestHeaders.Add(Headers.Standard.UserAgent, "ExecutionRouter/1.0");
         });
         services.AddScoped<IExecutor, HttpExecutor>();
         services.AddScoped<IExecutor, PowerShellExecutor>();

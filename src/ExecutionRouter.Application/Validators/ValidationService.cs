@@ -1,4 +1,5 @@
 using System.Text;
+using ExecutionRouter.Domain.Constants;
 using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Interfaces;
 
@@ -20,7 +21,11 @@ public sealed class ValidationService(int maxBodySizeBytes = ValidationService.M
     };
     private readonly HashSet<string> _blockedHeaders = new(StringComparer.OrdinalIgnoreCase)
     {
-        "host", "connection", "content-length", "transfer-encoding", "upgrade"
+        Headers.Standard.Host,
+        Headers.Standard.Connection,
+        Headers.Standard.ContentLength,
+        Headers.Standard.TransferEncoding,
+        Headers.Standard.Upgrade
     };
 
     public ValidationResult ValidateRequest(ExecutionRequest request)

@@ -16,24 +16,24 @@ public sealed class HttpExecutor(HttpClient httpClient) : IExecutor
 
     private readonly HashSet<string> _allowedHeaders = new(StringComparer.OrdinalIgnoreCase)
     {
-        "accept",
-        "accept-encoding",
-        "accept-language",
-        "authorization",
-        "cache-control",
+        Headers.Standard.Accept,
+        Headers.Standard.AcceptEncoding,
+        Headers.Standard.AcceptLanguage,
+        Headers.Standard.Authorization,
+        Headers.Standard.CacheControl,
         Headers.Standard.ContentType,
-        "if-match",
-        "if-none-match",
-        "if-modified-since",
-        "if-unmodified-since",
-        "user-agent",
-        "x-requested-with",
-        "x-forwarded-for",
-        "x-real-ip",
-        "x-api-key",
-        "x-auth-token",
-        "x-correlation-id",
-        "x-request-id"
+        Headers.Standard.IfMatch,
+        Headers.Standard.IfNoneMatch,
+        Headers.Standard.IfModifiedSince,
+        Headers.Standard.IfUnmodifiedSince,
+        Headers.Standard.UserAgent,
+        Headers.Extended.XRequestedWith,
+        Headers.Extended.XForwardedFor,
+        Headers.Extended.XRealIp,
+        Headers.Extended.XApiKey,
+        Headers.Extended.XAuthToken,
+        Headers.Extended.XCorrelationId,
+        Headers.Extended.XRequestId
     };
 
     public async Task<ExecutorResult> ExecuteAsync(ExecutionRequest request, CancellationToken cancellationToken = default)

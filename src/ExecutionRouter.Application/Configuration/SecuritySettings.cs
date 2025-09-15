@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net.Mime;
+using ExecutionRouter.Domain.Constants;
 
 namespace ExecutionRouter.Application.Configuration;
 
@@ -50,13 +51,13 @@ public class SecuritySettings
     [Required]
     public IEnumerable<string> SensitiveHeaders { get; init; } =
     [
-        "authorization",
-        "x-api-key",
-        "x-auth-token",
-        "cookie",
-        "set-cookie",
-        "x-forwarded-authorization",
-        "proxy-authorization"
+        Headers.Standard.Authorization,
+        Headers.Extended.XApiKey,
+        Headers.Extended.XAuthToken,
+        Headers.Standard.Cookie,
+        Headers.Standard.SetCookie,
+        Headers.Extended.XForwardedAuthorization,
+        Headers.Standard.ProxyAuthorization
     ];
 
     /// <summary>

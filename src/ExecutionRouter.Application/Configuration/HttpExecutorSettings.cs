@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using ExecutionRouter.Domain.Constants;
 
 namespace ExecutionRouter.Application.Configuration;
 
@@ -44,14 +45,14 @@ public class HttpExecutorSettings
     /// </summary>
     public IEnumerable<string> FilteredHeaders { get; init; } =
     [
-        "host",
-        "connection",
-        "content-length",
-        "transfer-encoding",
-        "upgrade",
-        "x-request-id",
-        "x-correlation-id",
-        "x-executor-type",
-        "x-request-timeout"
+        Headers.Standard.Host,
+        Headers.Standard.Connection,
+        Headers.Standard.ContentLength,
+        Headers.Standard.TransferEncoding,
+        Headers.Standard.Upgrade,
+        Headers.Extended.XRequestId,
+        Headers.Extended.XCorrelationId,
+        Headers.ExecutionRouter.ExecutorType,
+        Headers.Extended.XRequestTimeout
     ];
 }

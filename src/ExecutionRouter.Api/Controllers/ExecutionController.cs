@@ -62,7 +62,7 @@ public class ExecutionController(
     private async Task<ExecutionRequest> BuildExecutionRequestAsync(string path, string requestId, string? correlationId)
     {
         var executorType = Request.Query["executor"].FirstOrDefault() ??
-           Request.Headers["X-Executor-Type"].FirstOrDefault() ??
+           Request.Headers[Headers.ExecutionRouter.ExecutorType].FirstOrDefault() ??
            "http";
 
         var queryParameters = Request.Query
@@ -81,7 +81,7 @@ public class ExecutionController(
         }
 
         var timeoutSeconds = 10;
-        if (Request.Headers.TryGetValue("X-Request-Timeout", out var timeoutHeader) &&
+        if (Request.Headers.TryGetValue(Headers.Extended.XRequestTimeout, out var timeoutHeader) &&
             int.TryParse(timeoutHeader.FirstOrDefault(), out var parsedTimeout))
         {
             timeoutSeconds = parsedTimeout;
@@ -103,25 +103,25 @@ public class ExecutionController(
     {
         var excludedHeaders = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            "host",
-            "connection",
-            "content-length",
-            "transfer-encoding",
-            "upgrade",
-            "x-request-id",
-            "x-correlation-id",
-            "x-executor-type",
-            "x-request-timeout"
+            Headers.Standard.Host,
+            Headers.Standard.Connection,
+            Headers.Standard.ContentLength,
+            Headers.Standard.TransferEncoding,
+            Headers.Standard.Upgrade,
+            Headers.Extended.XRequestId,
+            Headers.Extended.XCorrelationId,
+            Headers.ExecutionRouter.ExecutorType,
+            Headers.Extended.XRequestTimeout
         };
 
         return !excludedHeaders.Contains(headerName);
     }
 
-    private string GetOrGenerateRequestId() => Request.Headers["X-Request-Id"].FirstOrDefault() ??
+    private string GetOrGenerateRequestId() => Request.Headers[Headers.Extended.XRequestId].FirstOrDefault() ??
        Request.Headers[Headers.ExecutionRouter.RequestId].FirstOrDefault() ??
        Guid.NewGuid().ToString("N")[..12];
 
-    private string? GetCorrelationId() => Request.Headers["X-Correlation-Id"].FirstOrDefault() ??
+    private string? GetCorrelationId() => Request.Headers[Headers.Extended.XCorrelationId].FirstOrDefault() ??
         Request.Headers[Headers.ExecutionRouter.CorrelationId].FirstOrDefault();
 
     private void AddResponseHeaders(ExecutionResponseDto response)

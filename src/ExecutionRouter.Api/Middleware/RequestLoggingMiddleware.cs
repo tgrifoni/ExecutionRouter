@@ -54,12 +54,12 @@ public class RequestLoggingMiddleware(
     }
 
     private static string GetRequestId(HttpContext context) =>
-        context.Request.Headers["X-Request-Id"].FirstOrDefault() ??
+        context.Request.Headers[Headers.Extended.XRequestId].FirstOrDefault() ??
         context.Request.Headers[Headers.ExecutionRouter.RequestId].FirstOrDefault() ??
         Guid.NewGuid().ToString("N")[..12];
 
     private static string? GetCorrelationId(HttpContext context) =>
-        context.Request.Headers["X-Correlation-Id"].FirstOrDefault() ??
+        context.Request.Headers[Headers.Extended.XCorrelationId].FirstOrDefault() ??
         context.Request.Headers[Headers.ExecutionRouter.CorrelationId].FirstOrDefault();
 
     private static string DetermineStatus(int statusCode) =>

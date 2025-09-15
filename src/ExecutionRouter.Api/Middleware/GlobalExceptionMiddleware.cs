@@ -25,7 +25,7 @@ public class GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExcep
         context.Response.ContentType = System.Net.Mime.MediaTypeNames.Application.Json;
         context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 
-        var requestId = context.Request.Headers["X-Request-Id"].FirstOrDefault() ??
+        var requestId = context.Request.Headers[Headers.Extended.XRequestId].FirstOrDefault() ??
             context.Request.Headers[Headers.ExecutionRouter.RequestId].FirstOrDefault() ??
             "unknown";
 
