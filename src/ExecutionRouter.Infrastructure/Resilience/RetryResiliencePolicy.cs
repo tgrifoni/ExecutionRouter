@@ -2,6 +2,7 @@ using ExecutionRouter.Domain.Entities;
 using ExecutionRouter.Domain.Exceptions;
 using ExecutionRouter.Domain.Interfaces;
 using ExecutionRouter.Domain.ValueObjects;
+using Polly;
 
 namespace ExecutionRouter.Infrastructure.Resilience;
 
@@ -11,109 +12,110 @@ namespace ExecutionRouter.Infrastructure.Resilience;
 public sealed class RetryResiliencePolicy(RetryPolicyConfiguration configuration, ISystemClock systemClock)
     : IResiliencePolicy
 {
-    private readonly Random _random = new();
-
     public async Task<PolicyExecutionResult> ExecuteAsync(
         Func<CancellationToken, Task<ExecutorResult>> operation,
         PolicyExecutionContext context,
         CancellationToken cancellationToken = default)
     {
         var attemptSummaries = new List<AttemptSummary>();
-        Exception? lastException = null;
+        var attemptCount = 0;
 
-        using var totalTimeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        totalTimeoutCts.CancelAfter(context.Timeout);
-
-        for (var attempt = 1; attempt <= configuration.MaxAttempts; attempt++)
-        {
-            var attemptStartTime = systemClock.UtcNow;
-            
-            try
-            {
-                using var attemptTimeoutCts = CancellationTokenSource.CreateLinkedTokenSource(totalTimeoutCts.Token);
-                var perAttemptTimeout = CalculatePerAttemptTimeout(context.Timeout, attempt);
-                attemptTimeoutCts.CancelAfter(perAttemptTimeout);
-
-                var result = await operation(attemptTimeoutCts.Token);
-                
-                var attemptEndTime = systemClock.UtcNow;
-                attemptSummaries.Add(new AttemptSummary(
-                    attempt,
-                    attemptStartTime,
-                    attemptEndTime,
-                    AttemptOutcome.Success));
-
-                return PolicyExecutionResult.Success(result, attemptSummaries);
-            }
-            catch (Exception ex)
-            {
-                var attemptEndTime = systemClock.UtcNow;
-                lastException = ex;
-
-                var (outcome, isTransient, attemptErrorMessage) = ClassifyException(ex);
-                
-                attemptSummaries.Add(new AttemptSummary(
-                    attempt,
-                    attemptStartTime,
-                    attemptEndTime,
-                    outcome,
-                    attemptErrorMessage,
-                    isTransient));
-
-                if (!isTransient || attempt >= configuration.MaxAttempts)
+        var retryPolicy = Policy
+            .Handle<ExecutionFailedException>(ex => ex.IsTransient)
+            .Or<HttpRequestException>()
+            .Or<TaskCanceledException>()
+            .Or<TimeoutException>()
+            .WaitAndRetryAsync(
+                retryCount: configuration.MaxAttempts - 1,
+                sleepDurationProvider: retryAttempt => 
                 {
-                    break;
-                }
+                    var delay = TimeSpan.FromMilliseconds(configuration.BaseDelayMilliseconds * Math.Pow(configuration.BackoffMultiplier, retryAttempt - 1));
+                    if (delay > configuration.MaxDelayMilliseconds)
+                    {
+                        delay = configuration.MaxDelayMilliseconds;
+                    }
 
-                if (attempt < configuration.MaxAttempts)
-                {
-                    var delay = CalculateDelay(attempt);
+                    if (!configuration.UseJitter)
+                    {
+                        return delay;
+                    }
                     
-                    try
-                    {
-                        await Task.Delay(delay, totalTimeoutCts.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
+                    var jitter = Random.Shared.NextDouble() * 0.2 - 0.1;
+                    delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * (1 + jitter));
 
-        // All attempts failed
-        var errorMessage = lastException?.Message ?? "Operation failed after all retry attempts";
-        return PolicyExecutionResult.Failure(attemptSummaries, errorMessage);
-    }
+                    return delay;
+                });
 
-    private TimeSpan CalculatePerAttemptTimeout(TimeSpan totalTimeout, int attemptNumber)
-    {
-        var remainingAttempts = configuration.MaxAttempts - attemptNumber + 1;
-        var perAttemptTimeout = TimeSpan.FromMilliseconds(totalTimeout.TotalMilliseconds / remainingAttempts);
-        
-        var minTimeout = TimeSpan.FromSeconds(5);
-        return perAttemptTimeout < minTimeout ? minTimeout : perAttemptTimeout;
-    }
-
-    private (AttemptOutcome outcome, bool isTransient, string errorMessage) ClassifyException(Exception ex)
-    {
-        return ex switch
+        try
         {
-            ExecutionTimeoutException => (AttemptOutcome.Timeout, true, ex.Message),
-            ExecutionFailedException executionEx => executionEx.IsTransient 
-                ? (AttemptOutcome.TransientFailure, true, ex.Message)
-                : (AttemptOutcome.PermanentFailure, false, ex.Message),
-            HttpRequestException httpEx => ClassifyHttpException(httpEx),
-            TaskCanceledException => (AttemptOutcome.Timeout, true, "Request timed out"),
-            OperationCanceledException => (AttemptOutcome.Cancelled, false, "Operation was cancelled"),
-            _ => (AttemptOutcome.PermanentFailure, false, ex.Message)
-        };
+            var result = await retryPolicy.ExecuteAsync(async (ct) =>
+            {
+                attemptCount++;
+                var startTime = systemClock.UtcNow;
+                
+                try
+                {
+                    var execResult = await operation(ct);
+                    var endTime = systemClock.UtcNow;
+                    
+                    attemptSummaries.Add(new AttemptSummary(
+                        attemptCount,
+                        startTime,
+                        endTime,
+                        AttemptOutcome.Success));
+                        
+                    return execResult;
+                }
+                catch (Exception ex)
+                {
+                    var endTime = systemClock.UtcNow;
+                    var (outcome, isTransient) = ClassifyException(ex);
+                    
+                    attemptSummaries.Add(new AttemptSummary(
+                        attemptCount,
+                        startTime,
+                        endTime,
+                        outcome,
+                        ex.Message,
+                        isTransient));
+                        
+                    throw;
+                }
+            }, cancellationToken);
+
+            return PolicyExecutionResult.Success(result, attemptSummaries);
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = ex switch
+            {
+                OperationCanceledException when cancellationToken.IsCancellationRequested => "Operation was cancelled by user request",
+                OperationCanceledException => $"Operation timed out after {context.Timeout}",
+                ExecutionFailedException executionEx => executionEx.Message,
+                _ => $"Operation failed after {configuration.MaxAttempts} attempts: {ex.Message}"
+            };
+
+            return PolicyExecutionResult.Failure(attemptSummaries, errorMessage);
+        }
     }
 
-    private static (AttemptOutcome outcome, bool isTransient, string errorMessage) ClassifyHttpException(HttpRequestException httpEx)
+
+
+    private static (AttemptOutcome outcome, bool isTransient) ClassifyException(Exception ex) =>
+        ex switch
+        {
+            ExecutionTimeoutException => (AttemptOutcome.Timeout, true),
+            ExecutionFailedException executionFailedException => executionFailedException.IsTransient 
+                ? (AttemptOutcome.TransientFailure, true)
+                : (AttemptOutcome.PermanentFailure, false),
+            HttpRequestException httpRequestException => ClassifyHttpException(httpRequestException.Message.ToLowerInvariant()),
+            TaskCanceledException => (AttemptOutcome.Timeout, true),
+            OperationCanceledException => (AttemptOutcome.Cancelled, false),
+            _ => (AttemptOutcome.PermanentFailure, false)
+        };
+
+    private static (AttemptOutcome outcome, bool isTransient) ClassifyHttpException(string message)
     {
-        var message = httpEx.Message.ToLowerInvariant();
-        
         if (message.Contains("timeout") ||
             message.Contains("connection reset") ||
             message.Contains("network is unreachable") ||
@@ -124,34 +126,11 @@ public sealed class RetryResiliencePolicy(RetryPolicyConfiguration configuration
             message.Contains("503") ||
             message.Contains("504"))
         {
-            return (AttemptOutcome.TransientFailure, true, httpEx.Message);
+            return (AttemptOutcome.TransientFailure, true);
         }
 
-        // Permanent errors
-        return (AttemptOutcome.PermanentFailure, false, httpEx.Message);
+        return (AttemptOutcome.PermanentFailure, false);
     }
 
-    private TimeSpan CalculateDelay(int attemptNumber)
-    {
-        // Exponential backoff: baseDelay * (backoffMultiplier ^ (attempt - 1))
-        var delay = TimeSpan.FromMilliseconds(
-            configuration.BaseDelayMs * Math.Pow(configuration.BackoffMultiplier, attemptNumber - 1));
 
-        // Apply maximum delay cap
-        if (delay > configuration.MaxDelay)
-        {
-            delay = configuration.MaxDelay;
-        }
-
-        // Apply jitter to avoid thundering herd
-        if (configuration.UseJitter)
-        {
-            var jitterMs = (int)(delay.TotalMilliseconds * 0.1);
-            var randomJitter = _random.Next(-jitterMs, jitterMs + 1);
-            delay = delay.Add(TimeSpan.FromMilliseconds(randomJitter));
-        }
-
-        // Ensure minimum delay
-        return delay < TimeSpan.Zero ? TimeSpan.Zero : delay;
-    }
 }
