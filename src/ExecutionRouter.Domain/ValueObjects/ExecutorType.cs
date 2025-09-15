@@ -1,4 +1,6 @@
-﻿namespace ExecutionRouter.Domain.ValueObjects;
+﻿using ExecutionRouter.Domain.Constants;
+
+namespace ExecutionRouter.Domain.ValueObjects;
 
 /// <summary>
 /// Represents the type of executor to use for the request
@@ -12,15 +14,15 @@ public sealed record ExecutorType
         Value = value;
     }
 
-    public static ExecutorType Http => new("http");
-    public static ExecutorType PowerShell => new("powershell");
+    public static ExecutorType Http => new(ExecutorTypes.Http);
+    public static ExecutorType PowerShell => new(ExecutorTypes.PowerShell);
 
     public static ExecutorType FromString(string value)
     {
         return value.ToLowerInvariant() switch
         {
-            "http" => Http,
-            "powershell" => PowerShell,
+            ExecutorTypes.Http => Http,
+            ExecutorTypes.PowerShell => PowerShell,
             _ => throw new ArgumentException($"Unknown executor type: {value}", nameof(value))
         };
     }

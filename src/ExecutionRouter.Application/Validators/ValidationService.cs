@@ -99,10 +99,10 @@ public sealed class ValidationService(int maxBodySizeBytes = ValidationService.M
     {
         switch (request.ExecutorType.Value)
         {
-            case "http":
+            case ExecutorTypes.Http:
                 ValidateHttpExecutor(request, errors);
                 break;
-            case "powershell":
+            case ExecutorTypes.PowerShell:
                 ValidatePowerShellExecutor(request, errors);
                 break;
         }

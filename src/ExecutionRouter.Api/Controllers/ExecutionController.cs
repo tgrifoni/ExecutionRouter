@@ -63,7 +63,7 @@ public class ExecutionController(
     {
         var executorType = Request.Query["executor"].FirstOrDefault() ??
            Request.Headers[Headers.ExecutionRouter.ExecutorType].FirstOrDefault() ??
-           "http";
+           ExecutorTypes.Http;
 
         var queryParameters = Request.Query
             .Where(q => !string.Equals(q.Key, "executor", StringComparison.OrdinalIgnoreCase))

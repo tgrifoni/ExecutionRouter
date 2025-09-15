@@ -22,7 +22,7 @@ public class RequestLoggingMiddleware(
         logger.LogExecutionStart(
             requestId,
             correlationId,
-            "http",
+            ExecutorTypes.Http,
             context.Request.Method,
             context.Request.Path);
 
