@@ -1,3 +1,4 @@
+using System.Net;
 using ExecutionRouter.Application.Services;
 using ExecutionRouter.Application.Common;
 using ExecutionRouter.Application.Configuration;
@@ -35,13 +36,16 @@ public static class ServiceCollectionExtensions
         
         services.AddScoped<IValidationService, ValidationService>();
         
-        services.AddHttpClient<HttpExecutor>((serviceProvider, client) =>
-        {
-            var httpSettings = serviceProvider.GetRequiredService<IOptions<HttpExecutorSettings>>().Value;
-            client.Timeout = TimeSpan.FromSeconds(httpSettings.DefaultTimeoutSeconds);
-            client.DefaultRequestHeaders.Add(Headers.Standard.UserAgent, "ExecutionRouter/1.0");
-        });
-        services.AddScoped<IExecutor, HttpExecutor>();
+        services
+            .AddHttpClient<IExecutor, HttpExecutor>((serviceProvider, client) =>
+            {
+                var httpSettings = serviceProvider.GetRequiredService<IOptions<HttpExecutorSettings>>().Value;
+                client.Timeout = TimeSpan.FromSeconds(httpSettings.DefaultTimeoutSeconds);
+            })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.All
+            });
         services.AddScoped<IExecutor, PowerShellExecutor>();
         
         services.AddScoped<IResiliencePolicy>(serviceProvider =>

@@ -95,11 +95,6 @@ public static class Headers
         /// Upgrade header
         /// </summary>
         public const string Upgrade = "upgrade";
-        
-        /// <summary>
-        /// User-Agent header
-        /// </summary>
-        public const string UserAgent = "User-Agent";
     }
     
     /// <summary>
