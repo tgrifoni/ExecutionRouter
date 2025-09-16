@@ -1,0 +1,43 @@
+{
+  "requestId": "req_ps123eml456",
+  "correlationId": "corr_eml789def",
+  "executorType": "powershell",
+  "startTime": "2025-09-17T18:28:30.9818607Z",
+  "endTime": "2025-09-17T18:28:31.2855483Z",
+  "durationMilliseconds": 303.6876,
+  "status": "success",
+  "attemptSummaries": [
+    {
+      "attemptNumber": 1,
+      "startTime": "2025-09-17T18:28:30.9820276Z",
+      "endTime": "2025-09-17T18:28:31.2855215Z",
+      "durationMilliseconds": 303.4939,
+      "outcome": "success",
+      "errorMessage": null,
+      "isTransient": false
+    }
+  ],
+  "result": {
+    "statusCode": null,
+    "headers": {},
+    "body": null,
+    "metadata": {
+      "command": "Get-Mailbox",
+      "stdout": "Name: John Doe, EmailAddress: john.doe@contoso.com\nName: Jane Smith, EmailAddress: jane.smith@contoso.com",
+      "stderr": "",
+      "result": [
+        {
+          "name": "John Doe",
+          "emailAddress": "john.doe@contoso.com",
+          "recipientType": "UserMailbox"
+        },
+        {
+          "name": "Jane Smith",
+          "emailAddress": "jane.smith@contoso.com",
+          "recipientType": "UserMailbox"
+        }
+      ]
+    }
+  },
+  "errorMessage": null
+}

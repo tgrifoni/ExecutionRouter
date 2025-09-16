@@ -1,0 +1,35 @@
+{
+  "requestId": "req_def456ghi789",
+  "correlationId": "corr_mno123pqr",
+  "executorType": "http",
+  "startTime": "2025-09-17T17:36:45.0700811Z",
+  "endTime": "2025-09-17T17:36:46.558037Z",
+  "durationMilliseconds": 1487.9559,
+  "status": "success",
+  "attemptSummaries": [
+    {
+      "attemptNumber": 1,
+      "startTime": "2025-09-17T17:36:45.0701388Z",
+      "endTime": "2025-09-17T17:36:46.5580263Z",
+      "durationMilliseconds": 1487.8875,
+      "outcome": "success",
+      "errorMessage": null,
+      "isTransient": false
+    }
+  ],
+  "result": {
+    "statusCode": 200,
+    "headers": {
+      "Date": "Wed, 17 Sep 2025 17:36:46 GMT",
+      "Connection": "keep-alive",
+      "Server": "gunicorn/19.9.0",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Credentials": "true",
+      "Content-Type": "application/json",
+      "Content-Length": "915"
+    },
+    "body": "{\n  \"args\": {}, \n  \"data\": \"{\\r\\n    \\\"name\\\": \\\"John Doe\\\",\\r\\n    \\\"email\\\": \\\"john.doe@example.com\\\",\\r\\n    \\\"role\\\": \\\"developer\\\"\\r\\n}\", \n  \"files\": {}, \n  \"form\": {}, \n  \"headers\": {\n    \"Accept\": \"*/*\", \n    \"Accept-Encoding\": \"gzip, deflate, br\", \n    \"Content-Length\": \"92\", \n    \"Content-Type\": \"application/json; charset=utf-8\", \n    \"Host\": \"httpbin.org\", \n    \"Postman-Token\": \"fe6c80d6-79ee-45ae-af7a-e457d5396dcb\", \n    \"Traceparent\": \"00-7770666c74a7c984375fb0bbb1f1dced-1c42e46ac7ff2fbd-00\", \n    \"User-Agent\": \"PostmanRuntime/7.46.1\", \n    \"X-Amzn-Trace-Id\": \"Root=1-68caf1ad-792cfd6b5d1dd9dc15569ec3\", \n    \"X-Executionrouter-Correlationid\": \"corr_mno123pqr\", \n    \"X-Executionrouter-Requestid\": \"req_def456ghi789\"\n  }, \n  \"json\": {\n    \"email\": \"john.doe@example.com\", \n    \"name\": \"John Doe\", \n    \"role\": \"developer\"\n  }, \n  \"origin\": \"109.78.170.161\", \n  \"url\": \"https://httpbin.org/post\"\n}\n",
+    "metadata": {}
+  },
+  "errorMessage": null
+}

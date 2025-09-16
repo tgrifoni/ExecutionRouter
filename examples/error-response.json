@@ -1,0 +1,49 @@
+{
+  "requestId": "req_err123fail456",
+  "correlationId": "corr_err789test",
+  "executorType": "http",
+  "method": "GET",
+  "path": "https://httpbin.org/status/500",
+  "timeoutSeconds": 30,
+  "status": "failed",
+  "startTime": "2025-09-16T19:40:00.000Z",
+  "endTime": "2025-09-16T19:40:09.123Z",
+  "durationMilliseconds": 9123.4,
+  "attemptSummaries": [
+    {
+      "attemptNumber": 1,
+      "startTime": "2025-09-16T19:40:00.000Z",
+      "endTime": "2025-09-16T19:40:01.500Z",
+      "durationMilliseconds": 1500.0,
+      "outcome": "failed",
+      "errorMessage": "HTTP 500 Internal Server Error"
+    },
+    {
+      "attemptNumber": 2,
+      "startTime": "2025-09-16T19:40:02.500Z",
+      "endTime": "2025-09-16T19:40:04.200Z",
+      "durationMilliseconds": 1700.0,
+      "outcome": "failed",
+      "errorMessage": "HTTP 500 Internal Server Error"
+    },
+    {
+      "attemptNumber": 3,
+      "startTime": "2025-09-16T19:40:05.200Z",
+      "endTime": "2025-09-16T19:40:09.123Z",
+      "durationMilliseconds": 3923.4,
+      "outcome": "failed",
+      "errorMessage": "HTTP 500 Internal Server Error"
+    }
+  ],
+  "result": {
+    "statusCode": 500,
+    "headers": {
+      "content-type": "text/html",
+      "content-length": "0",
+      "server": "gunicorn/19.9.0"
+    },
+    "body": "",
+    "bodyTruncated": false,
+    "errorDetails": "Maximum retry attempts (3) exceeded. All attempts failed with transient errors."
+  }
+}

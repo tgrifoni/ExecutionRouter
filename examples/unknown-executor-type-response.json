@@ -1,0 +1,8 @@
+{
+  "requestId": "req_val123err456",
+  "correlationId": null,
+  "status": "failed",
+  "errorType": "InvalidRequest",
+  "errorMessage": "Unknown executor type: whatever",
+  "timestamp": "2025-09-17T17:54:47.3770733Z"
+}
