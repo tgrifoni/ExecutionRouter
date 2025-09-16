@@ -1,0 +1,60 @@
+# Docker Compose for ExecutionRouter
+# Provides an easy way to run the application with proper configuration
+
+services:
+  executionrouter-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: executionrouter-api
+    ports:
+      - "7052:8080"
+    environment:
+      # ASP.NET Core configuration
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      
+      # ExecutionRouter configuration via environment variables
+      - ExecutionRouter__Security__MaxRequestBodySizeBytes=10485760
+      - ExecutionRouter__Security__MaxTimeoutSeconds=120
+      - ExecutionRouter__Security__ValidateRequestBody=true
+      
+      - ExecutionRouter__HttpExecutor__DefaultTimeoutSeconds=30
+      - ExecutionRouter__HttpExecutor__MaxConcurrentRequests=100
+      
+      - ExecutionRouter__PowerShellExecutor__Enabled=true
+      - ExecutionRouter__PowerShellExecutor__MaxExecutionTimeoutSeconds=60
+      - ExecutionRouter__PowerShellExecutor__ExecutionPolicy=RemoteSigned
+      
+      - ExecutionRouter__Resilience__MaxRetryAttempts=3
+      - ExecutionRouter__Resilience__BaseDelayMilliseconds=1000
+      - ExecutionRouter__Resilience__MaxDelayMilliseconds=30000
+      - ExecutionRouter__Resilience__UseJitter=true
+      
+      - ExecutionRouter__Observability__EnableStructuredLogging=true
+      - ExecutionRouter__Observability__LogLevel=Information
+      - ExecutionRouter__Observability__EnableMetrics=true
+      - ExecutionRouter__Observability__MaxLogEntrySizeChars=10000
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    restart: unless-stopped
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+networks:
+  default:
+    name: executionrouter-network

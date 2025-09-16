@@ -1,0 +1,91 @@
+# .dockerignore file for ExecutionRouter
+# Excludes files and directories that should not be sent to Docker build context
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# Test projects (exclude from Docker builds)
+tests/
+**/Tests/
+**/*.Tests/
+**/*Test*/
+**/*Tests.*/
+
+# Visual Studio / IDE files
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Test results
+**/TestResults/
+**/test-results/
+**/*.trx
+**/*.coverage
+**/*.coveragexml
+
+# NuGet packages
+**/packages/
+*.nupkg
+*.snupkg
+
+# Node.js (if any frontend assets)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker
+Dockerfile*
+.dockerignore
+docker-compose*.yml
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Logs
+logs/
+*.log
+
+# Runtime files that shouldn't be in image
+*.tmp
+*.temp
+*.cache
+
+# IDE settings
+.idea/
+*.swp
+*.swo
+*~
+
+# Local environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Examples and samples
+examples/
+samples/
