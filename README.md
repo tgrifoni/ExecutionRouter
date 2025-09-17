@@ -254,6 +254,11 @@ ExecutionRouter__Observability__LogLevel=Information
 
 ## If I Had More Time...
 
+- Improve unit/integration test suite and improve code coverage
+- Improve retry policy
+- Leverage SpecFlow for scenario-based testing
+- Clean up code and refactor to remove duplication and unnecessary code
+- Create DTO for error response
 - Add circuit breaker with Polly
 - Add rate limiting with Polly
 - Create PowerShell session pooling and reuse mechanisms
