@@ -20,7 +20,7 @@ public sealed class RetryResiliencePolicy(RetryPolicyConfiguration configuration
         var attemptSummaries = new List<AttemptSummary>();
         var attemptCount = 0;
 
-        var retryPolicy = Policy
+        var retryPolicyWithCallbacks = Policy
             .Handle<ExecutionFailedException>(ex => ex.IsTransient)
             .Or<HttpRequestException>()
             .Or<TaskCanceledException>()
@@ -44,44 +44,45 @@ public sealed class RetryResiliencePolicy(RetryPolicyConfiguration configuration
                     delay = TimeSpan.FromMilliseconds(delay.TotalMilliseconds * (1 + jitter));
 
                     return delay;
-                });
+                },
+                onRetry: (outcome, timespan, retryContext) =>
+                {
+                    var endTime = systemClock.UtcNow;
+                    var startTime = retryContext.TryGetValue("StartTime", out var value)
+                        ? (DateTime)value
+                        : endTime.Subtract(timespan);
+                    
+                    var (attemptOutcome, isTransient) = ClassifyException(outcome);
+                    
+                    attemptSummaries.Add(new AttemptSummary(
+                        attemptCount,
+                        startTime,
+                        endTime,
+                        attemptOutcome,
+                        outcome.Message,
+                        isTransient));
+                }
+            );
 
         try
         {
-            var result = await retryPolicy.ExecuteAsync(async (ct) =>
+            var result = await retryPolicyWithCallbacks.ExecuteAsync(async (retryContext, ct) =>
             {
                 attemptCount++;
                 var startTime = systemClock.UtcNow;
+                retryContext["StartTime"] = startTime;
                 
-                try
-                {
-                    var execResult = await operation(ct);
-                    var endTime = systemClock.UtcNow;
+                var execResult = await operation(ct);
+                var endTime = systemClock.UtcNow;
+                
+                attemptSummaries.Add(new AttemptSummary(
+                    attemptCount,
+                    startTime,
+                    endTime,
+                    AttemptOutcome.Success));
                     
-                    attemptSummaries.Add(new AttemptSummary(
-                        attemptCount,
-                        startTime,
-                        endTime,
-                        AttemptOutcome.Success));
-                        
-                    return execResult;
-                }
-                catch (Exception ex)
-                {
-                    var endTime = systemClock.UtcNow;
-                    var (outcome, isTransient) = ClassifyException(ex);
-                    
-                    attemptSummaries.Add(new AttemptSummary(
-                        attemptCount,
-                        startTime,
-                        endTime,
-                        outcome,
-                        ex.Message,
-                        isTransient));
-                        
-                    throw;
-                }
-            }, cancellationToken);
+                return execResult;
+            }, new Context(), cancellationToken);
 
             return PolicyExecutionResult.Success(result, attemptSummaries);
         }
@@ -94,6 +95,22 @@ public sealed class RetryResiliencePolicy(RetryPolicyConfiguration configuration
                 ExecutionFailedException executionEx => executionEx.Message,
                 _ => $"Operation failed after {configuration.MaxAttempts} attempts: {ex.Message}"
             };
+
+            if (attemptSummaries.Count != 0 && attemptSummaries.Last().Outcome != AttemptOutcome.Success)
+            {
+                return PolicyExecutionResult.Failure(attemptSummaries, errorMessage);
+            }
+            
+            var endTime = systemClock.UtcNow;
+            var (outcome, isTransient) = ClassifyException(ex);
+                
+            attemptSummaries.Add(new AttemptSummary(
+                attemptCount,
+                endTime.AddMilliseconds(-100),
+                endTime,
+                outcome,
+                ex.Message,
+                isTransient));
 
             return PolicyExecutionResult.Failure(attemptSummaries, errorMessage);
         }
