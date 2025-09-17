@@ -111,15 +111,6 @@ public class HealthController(IMetricsCollector metricsCollector, ILogger<Health
         }
     }
 
-    /// <summary>
-    /// Reset metrics (for testing purposes)
-    /// </summary>
-    [HttpPost("/metrics/reset")]
-    public IActionResult ResetMetrics()
-    {
-        return Ok(new { Message = "Metrics reset is not implemented in this demo version" });
-    }
-
     private static string GetUptime()
     {
         var uptime = DateTime.UtcNow - System.Diagnostics.Process.GetCurrentProcess().StartTime.ToUniversalTime();

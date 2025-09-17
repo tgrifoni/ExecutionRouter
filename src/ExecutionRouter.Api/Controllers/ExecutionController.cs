@@ -40,9 +40,17 @@ public class ExecutionController(
             var response = await orchestrationService.ExecuteAsync(executionRequest, cancellationToken);
             var responseDto = ExecutionResponseDto.FromDomain(response);
             AddResponseHeaders(responseDto);
-            
+
             var statusCode = DetermineHttpStatusCode(response);
             return StatusCode(statusCode, responseDto);
+        }
+        catch (ArgumentException ex)
+        {
+            logger.LogWarning("Invalid request {RequestId}: {Message}", requestId, ex.Message);
+            
+            var errorResponse = CreateErrorResponse(requestId, correlationId, "InvalidRequest", ex.Message);
+            AddResponseHeaders(errorResponse);
+            return BadRequest(errorResponse);
         }
         catch (ValidationException ex)
         {

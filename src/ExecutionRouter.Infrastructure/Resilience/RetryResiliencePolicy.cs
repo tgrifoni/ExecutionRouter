@@ -98,9 +98,7 @@ public sealed class RetryResiliencePolicy(RetryPolicyConfiguration configuration
             return PolicyExecutionResult.Failure(attemptSummaries, errorMessage);
         }
     }
-
-
-
+    
     private static (AttemptOutcome outcome, bool isTransient) ClassifyException(Exception ex) =>
         ex switch
         {
@@ -131,6 +129,4 @@ public sealed class RetryResiliencePolicy(RetryPolicyConfiguration configuration
 
         return (AttemptOutcome.PermanentFailure, false);
     }
-
-
 }

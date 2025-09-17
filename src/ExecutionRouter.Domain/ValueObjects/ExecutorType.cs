@@ -23,7 +23,7 @@ public sealed record ExecutorType
         {
             ExecutorTypes.Http => Http,
             ExecutorTypes.PowerShell => PowerShell,
-            _ => throw new ArgumentException($"Unknown executor type: {value}", nameof(value))
+            _ => throw new ArgumentException($"Unknown executor type: {value}")
         };
     }
 
