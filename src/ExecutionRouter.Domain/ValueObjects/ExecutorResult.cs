@@ -10,7 +10,7 @@ public sealed record ExecutorResult
     public string? Body { get; }
     public Dictionary<string, object> Metadata { get; }
 
-    public ExecutorResult(
+    private ExecutorResult(
         int? statusCode = null,
         Dictionary<string, string>? headers = null,
         string? body = null,
@@ -37,8 +37,10 @@ public sealed record ExecutorResult
         };
         
         if (result != null)
+        {
             metadata["result"] = result;
+        }
         
-        return new ExecutorResult(metadata: metadata);
+        return new ExecutorResult(body: stdout, metadata: metadata);
     }
 }
