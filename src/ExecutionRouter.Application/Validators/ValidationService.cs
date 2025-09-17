@@ -45,6 +45,11 @@ public sealed class ValidationService(IOptions<SecuritySettings> securityOptions
             }
         }
 
+        if (request.Headers.Count > _securitySettings.MaxHeaderCount)
+        {
+            errors.Add($"Too many headers. Maximum number of headers is {_securitySettings.MaxHeaderCount}");
+        }
+
         foreach (var header in request.Headers)
         {
             if (string.IsNullOrWhiteSpace(header.Key))
@@ -72,6 +77,11 @@ public sealed class ValidationService(IOptions<SecuritySettings> securityOptions
         else if (request.TimeoutSeconds > TimeSpan.FromSeconds(_securitySettings.MaxTimeoutSeconds))
         {
             errors.Add("Timeout cannot exceed 10 minutes");
+        }
+
+        if (request.QueryParameters.Count > _securitySettings.MaxQueryParameterCount)
+        {
+            errors.Add($"Too many query parameters. Maximum number of query parameters is {_securitySettings.MaxQueryParameterCount}");
         }
 
         ValidateExecutorSpecific(request, errors);
