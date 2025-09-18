@@ -96,7 +96,7 @@ A production-grade, extensible remote request execution service that routes clie
 **Backoff Formula**: `baseDelay * (2^attemptNumber) + jitter`
 - Base delay: 1000ms (configurable)
 - Max delay: 30000ms (configurable)  
-- Jitter: ±25% randomization to prevent thundering herd
+- Jitter: ±10% randomization to prevent thundering herd
 
 **Transient Classification**: Network timeouts, 5XX responses, specific exceptions
 
@@ -136,7 +136,7 @@ A production-grade, extensible remote request execution service that routes clie
 delay = Math.Min(
     baseDelayMs * Math.Pow(2, attemptNumber), 
     maxDelayMs
-) + jitter(-25% to +25%)
+) + jitter(-10% to +10%)
 ```
 
 ### Circuit Breaker Pattern
@@ -181,6 +181,8 @@ Ready for implementation via Polly's circuit breaker with configurable failure t
 
 ## How to Run
 
+![Tests](https://img.shields.io/badge/tests-84%20passing-brightgreen) ![Build](https://img.shields.io/badge/build-passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-validation%20logic-brightgreen)
+
 ### Local Development (.NET)
 ```bash
 cd src/ExecutionRouter.Api
@@ -188,9 +190,21 @@ dotnet run
 # API available at https://localhost:7052
 ```
 
+### Testing
+```bash
+# Run all tests (84 tests - integration + unit)
+dotnet test
+
+# Run only unit tests 
+dotnet test tests/ExecutionRouter.Tests.Unit
+
+# Run only integration tests
+dotnet test tests/ExecutionRouter.Tests.Integration
+```
+
 ### Docker
 ```bash
-# Using Docker Compose (recommended)
+# Docker Compose (includes dependencies)
 docker-compose up --build
 
 # Direct Docker run
@@ -211,11 +225,7 @@ curl "http://localhost:7052/api/https://www.google.com" \
 
 ### PowerShell Executor
 ```bash
-# Exchange Online mailbox listing
-curl "http://localhost:7052/api/mailboxes?command=Get-Mailbox" \
-  -H "X-ExecutionRouter-ExecutorType: powershell"
-
-# With correlation tracking
+# Mailbox listing with correlation tracking
 curl "http://localhost:7052/api/users?command=Get-User" \
   -H "X-ExecutionRouter-ExecutorType: powershell" \
   -H "X-Correlation-Id: tracking-123"
@@ -256,6 +266,7 @@ ExecutionRouter__Observability__LogLevel=Information
 
 - Improve unit/integration test suite and improve code coverage
 - Improve retry policy
+- Refactor PowerShellExecutor to use PowerShell Core
 - Leverage SpecFlow for scenario-based testing
 - Clean up code and refactor to remove duplication and unnecessary code
 - Create DTO for error response
